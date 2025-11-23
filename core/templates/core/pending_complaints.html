@@ -4,32 +4,28 @@
 {% block page_title %}Pending Complaints{% endblock %}
 
 {% block content %}
-<div class="glass-card" style="padding:25px; border-radius:18px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.14); backdrop-filter: blur(12px) saturate(140%);">
+<div class="container">
+    <h3 class="mb-4">Pending Complaints</h3>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3>Pending Complaints</h3>
-        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">Back to Dashboard</a>
-    </div>
-
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Title</th>
-                    <th>Category</th>
-                    <th>Location</th>
-                    <th>Date</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for complaint in complaints %}
-                <tr>
-                    <td>{{ complaint.title }}</td>
-                    <td>{{ complaint.category }}</td>
-                    <td>{{ complaint.location }}</td>
-                    <td>{{ complaint.created_at|date:"M d, Y" }}</td>
-                    <td class="d-flex gap-2">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for complaint in complaints %}
+            <tr>
+                <td>{{ complaint.title }}</td>
+                <td>{{ complaint.category }}</td>
+                <td>{{ complaint.location }}</td>
+                <td>{{ complaint.created_at|date:"M d, Y" }}</td>
+                <td class="d-flex gap-2">
+                    {% if user.profile.role == "staff" or user.profile.role == "admin" %}
                         <form method="POST" action="{% url 'update_status' complaint.id 'in_progress' %}">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-warning">In Progress</button>
@@ -38,16 +34,16 @@
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-success">Resolved</button>
                         </form>
-                        <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-sm btn-info">View</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="text-center">No pending complaints.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                    {% endif %}
+                    <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-sm btn-info">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No pending complaints.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

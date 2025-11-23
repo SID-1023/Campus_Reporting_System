@@ -10,7 +10,7 @@ from .models import Complaint, Profile
 
 
 # -------------------------------
-#  USER REGISTER
+# USER REGISTER
 # -------------------------------
 def register(request):
     if request.method == "POST":
@@ -31,7 +31,7 @@ def register(request):
 
 
 # -------------------------------
-#  USER LOGIN
+# USER LOGIN
 # -------------------------------
 def user_login(request):
     if request.method == "POST":
@@ -49,7 +49,7 @@ def user_login(request):
 
 
 # -------------------------------
-#  USER LOGOUT
+# USER LOGOUT
 # -------------------------------
 @login_required
 def user_logout(request):
@@ -59,7 +59,7 @@ def user_logout(request):
 
 
 # -------------------------------
-#  DASHBOARD
+# DASHBOARD
 # -------------------------------
 @login_required
 def dashboard(request):
@@ -68,11 +68,18 @@ def dashboard(request):
         complaints = Complaint.objects.all().order_by("-created_at")
     else:
         complaints = Complaint.objects.filter(user=user).order_by("-created_at")
-    return render(request, "core/dashboard.html", {"complaints": complaints})
+
+    # Pass user_can_update for template buttons
+    user_can_update = hasattr(user, "profile") and user.profile.role in ["staff", "admin"]
+
+    return render(request, "core/dashboard.html", {
+        "complaints": complaints,
+        "user_can_update": user_can_update
+    })
 
 
 # -------------------------------
-#  REPORT COMPLAINT
+# REPORT COMPLAINT
 # -------------------------------
 @login_required
 def report_complaint(request):
@@ -92,7 +99,7 @@ def report_complaint(request):
 
 
 # -------------------------------
-#  LIST + SEARCH + FILTER COMPLAINTS
+# LIST + SEARCH + FILTER COMPLAINTS
 # -------------------------------
 @login_required
 def complaint_list(request):
@@ -102,70 +109,113 @@ def complaint_list(request):
 
     complaints = Complaint.objects.all().order_by("-created_at")
 
-    # Search logic
     if q:
         complaints = complaints.filter(
-            models.Q(title__icontains=q)
-            | models.Q(description__icontains=q)
-            | models.Q(location__icontains=q)
+            models.Q(title__icontains=q) |
+            models.Q(description__icontains=q) |
+            models.Q(location__icontains=q)
         )
 
-    # Filter by category
     if category:
         complaints = complaints.filter(category=category)
 
-    # Filter by status
     if status:
         complaints = complaints.filter(status=status)
 
-    category_choices = Complaint._meta.get_field("category").choices
-    status_choices = Complaint._meta.get_field("status").choices
+    user = request.user
+    user_can_update = hasattr(user, "profile") and user.profile.role in ["staff", "admin"]
 
     context = {
         "complaints": complaints,
         "q": q,
         "selected_category": category,
         "selected_status": status,
-        "category_choices": category_choices,
-        "status_choices": status_choices,
+        "category_choices": Complaint._meta.get_field("category").choices,
+        "status_choices": Complaint._meta.get_field("status").choices,
+        "user_can_update": user_can_update
     }
     return render(request, "core/complaint_list.html", context)
 
 
 # -------------------------------
-#  PENDING COMPLAINTS
+# PENDING COMPLAINTS
 # -------------------------------
 @login_required
 def pending_complaints(request):
     user = request.user
     if hasattr(user, "profile") and user.profile.role in ["staff", "admin"]:
         complaints = Complaint.objects.filter(status="pending").order_by("-created_at")
+        user_can_update = True
     else:
         messages.error(request, "You are not authorized to view pending complaints.")
         return redirect("dashboard")
-    return render(request, "core/pending_complaints.html", {"complaints": complaints})
+    
+    return render(request, "core/pending_complaints.html", {
+        "complaints": complaints,
+        "user_can_update": True
+    })
 
 
 # -------------------------------
-#  UPDATE COMPLAINT STATUS
+# UPDATE COMPLAINT STATUS
 # -------------------------------
 @login_required
 def update_status(request, complaint_id, new_status):
-    if request.method == "POST":
-        complaint = get_object_or_404(Complaint, id=complaint_id)
-        complaint.status = new_status
-        complaint.save()
-        messages.success(
-            request,
-            f"Complaint '{complaint.title}' status updated to {new_status.replace('_',' ').title()}."
-        )
+    if request.method != "POST":
+        messages.error(request, "Invalid request method.")
+        return redirect("pending_complaints")
+
+    user = request.user
+    if not hasattr(user, "profile") or user.profile.role not in ["staff", "admin"]:
+        messages.error(request, "You do not have permission to update complaint status.")
+        return redirect("dashboard")
+
+    complaint = get_object_or_404(Complaint, id=complaint_id)
+    valid_statuses = [s[0] for s in Complaint._meta.get_field("status").choices]
+
+    if new_status not in valid_statuses:
+        messages.error(request, "Invalid status selected.")
+        return redirect("pending_complaints")
+
+    complaint.status = new_status
+    complaint.save()
+    messages.success(
+        request,
+        f"Complaint '{complaint.title}' status updated to '{new_status.replace('_',' ').title()}' successfully."
+    )
     return redirect("pending_complaints")
 
 
 # -------------------------------
-#  VIEW COMPLAINT DETAIL
+# VIEW COMPLAINT DETAIL
 # -------------------------------
 @login_required
 def complaint_detail(request, complaint_id):
     complaint = get_object_or_404(Complaint, id=complaint_id)
-    return render(request, "core/complaint_detail.html", {"complaint": complaint})
+    user = request.user
+    can_update = hasattr(user, "profile") and user.profile.role in ["staff", "admin"]
+    status_choices = Complaint._meta.get_field("status").choices
+
+    if request.method == "POST" and can_update:
+        new_status = request.POST.get("status")
+        valid_statuses = [s[0] for s in status_choices]
+        if new_status in valid_statuses:
+            complaint.status = new_status
+            complaint.save()
+            messages.success(
+                request,
+                f"Status updated to '{new_status.replace('_',' ').title()}' successfully."
+            )
+            return redirect("complaint_detail", complaint_id=complaint.id)
+        else:
+            messages.error(request, "Invalid status selected.")
+
+    return render(
+        request,
+        "core/complaint_detail.html",
+        {
+            "complaint": complaint,
+            "can_update": can_update,
+            "status_choices": status_choices
+        }
+    )

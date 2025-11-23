@@ -1,0 +1,63 @@
+{% extends "core/base.html" %}
+
+{% block title %}Complaint Detail — Campus Reporting{% endblock %}
+{% block page_title %}Complaint Detail{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Navigation Panel -->
+    <div class="mb-4 d-flex gap-2">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">Dashboard</a>
+        <a href="{% url 'complaint_list' %}" class="btn btn-outline-secondary">All Complaints</a>
+        <a href="{% url 'pending_complaints' %}" class="btn btn-outline-warning">Pending Complaints</a>
+    </div>
+
+    <!-- Complaint Details Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>{{ complaint.title }}</h5>
+            <small class="text-muted">{{ complaint.created_at|date:"M d, Y H:i" }}</small>
+        </div>
+        <div class="card-body">
+            <p><strong>Category:</strong> {{ complaint.get_category_display }}</p>
+            <p><strong>Status:</strong> {{ complaint.get_status_display }}</p>
+            <p><strong>Location:</strong> {{ complaint.location }}</p>
+            <p><strong>Description:</strong></p>
+            <p>{{ complaint.description }}</p>
+
+            {% if complaint.image %}
+                <p><strong>Uploaded Image:</strong></p>
+                <img src="{{ complaint.image.url }}" alt="Complaint Image" class="img-fluid mb-3" style="max-width: 400px;">
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Status Update Form for Staff/Admin -->
+    {% if can_update %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6>Update Complaint Status</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            {% for key, val in status_choices %}
+                                <option value="{{ key }}" {% if key == complaint.status %}selected{% endif %}>
+                                    {{ val|capfirst }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Update Status</button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    <a href="{% url 'complaint_list' %}" class="btn btn-secondary">Back to Complaints</a>
+</div>
+{% endblock %}

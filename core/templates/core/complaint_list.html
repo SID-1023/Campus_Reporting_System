@@ -1,55 +1,95 @@
 {% extends "core/base.html" %}
 
 {% block title %}All Complaints — Campus Reporting{% endblock %}
-
 {% block page_title %}All Complaints{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>All Complaints</h2>
-        <a href="{% url 'report_complaint' %}" class="btn btn-primary" style="background:linear-gradient(90deg,#5ee7df,#7b61ff); border:none;">➕ Submit New</a>
+    <!-- Navigation Panel -->
+    <div class="mb-4 d-flex gap-2">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">Dashboard</a>
+        <a href="{% url 'pending_complaints' %}" class="btn btn-outline-warning">Pending Complaints</a>
+        <a href="{% url 'report_complaint' %}" class="btn btn-outline-success">Submit Complaint</a>
     </div>
 
-    <!-- Search and Filters -->
-    <form method="get" class="d-flex gap-2 flex-wrap mb-3">
-        <input type="text" name="q" value="{{ q }}" placeholder="Search title, description, location" class="form-control" style="max-width:250px;">
-        <select name="category" class="form-select" style="max-width:180px;">
-            <option value="">All Categories</option>
-            {% for val,label in category_choices %}
-                <option value="{{ val }}" {% if selected_category == val %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-        <select name="status" class="form-select" style="max-width:150px;">
-            <option value="">All Status</option>
-            {% for val,label in status_choices %}
-                <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit" class="btn btn-primary" style="background:linear-gradient(90deg,#5ee7df,#7b61ff); border:none;">Filter</button>
-        <a href="{% url 'complaint_list' %}" class="btn btn-outline-secondary">Reset</a>
+    <!-- Search & Filter -->
+    <form method="GET" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by title, description, or location">
+        </div>
+        <div class="col-md-3">
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                {% for key, val in category_choices %}
+                    <option value="{{ key }}" {% if key == selected_category %}selected{% endif %}>{{ val }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                {% for key, val in status_choices %}
+                    <option value="{{ key }}" {% if key == selected_status %}selected{% endif %}>{{ val|capfirst }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
     </form>
 
-    <!-- Complaints Grid -->
-    <div class="row g-3">
-        {% if complaints %}
+    <!-- Complaints Table -->
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Title</th>
+                <th>Image</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Location</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
             {% for complaint in complaints %}
-                <div class="col-md-6">
-                    <div class="p-3 mb-3" style="border-radius:18px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.14); backdrop-filter: blur(12px) saturate(140%);">
-                        <a href="#" style="font-size:1.25rem; font-weight:800; color:#0b4cff;">{{ complaint.title }}</a>
-                        <p class="mt-2 mb-1"><strong>Category:</strong> {{ complaint.category }} | <strong>Location:</strong> {{ complaint.location }}</p>
-                        {% if complaint.image %}
-                            <img src="{{ complaint.image.url }}" class="img-fluid rounded mb-2">
-                        {% endif %}
-                        <small class="text-muted">{{ complaint.created_at|date:"M d, Y — h:i A" }}</small>
-                    </div>
-                </div>
+            <tr {% if complaint.status == "pending" %}class="table-warning"{% endif %}>
+                <td>{{ complaint.title }}</td>
+                
+                <!-- Image Column -->
+                <td>
+                    {% if complaint.image %}
+                        <img src="{{ complaint.image.url }}" alt="{{ complaint.title }}" style="width: 80px; height: auto; border-radius: 5px;">
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                
+                <td>{{ complaint.category }}</td>
+                <td>{{ complaint.status|capfirst }}</td>
+                <td>{{ complaint.location }}</td>
+                <td>{{ complaint.created_at|date:"M d, Y" }}</td>
+                <td class="d-flex gap-2">
+                    {% if complaint.status == "pending" and user_can_update %}
+                        <form action="{% url 'update_status' complaint.id 'in_progress' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-warning">In Progress</button>
+                        </form>
+                        <form action="{% url 'update_status' complaint.id 'resolved' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success">Resolved</button>
+                        </form>
+                    {% endif %}
+                    <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-sm btn-info">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No complaints found.</td>
+            </tr>
             {% endfor %}
-        {% else %}
-            <div class="alert alert-info">No complaints found.</div>
-        {% endif %}
-    </div>
-
+        </tbody>
+    </table>
 </div>
 {% endblock %}

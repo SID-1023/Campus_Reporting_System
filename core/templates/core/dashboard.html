@@ -1,54 +1,50 @@
 {% extends "core/base.html" %}
 
-{% block title %}Dashboard{% endblock %}
-{% block page_title %}Welcome, {{ user.username }}{% endblock %}
+{% block title %}Dashboard — Campus Reporting{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container">
 
-    <!-- User Info -->
-    <div class="mb-4">
-        <h4>Hello, <strong>{{ user.username }}</strong></h4>
-        <p class="text-muted">Role: {{ user.profile.role|title }}</p>
+    <!-- Navigation Panel -->
+    <div class="mb-4 d-flex gap-2">
+        <a href="{% url 'pending_complaints' %}" class="btn btn-outline-warning">Pending Complaints</a>
+        <a href="{% url 'complaint_list' %}" class="btn btn-outline-secondary">All Complaints</a>
+        <a href="{% url 'report_complaint' %}" class="btn btn-outline-success">Submit Complaint</a>
     </div>
 
-    <!-- Recent Complaints -->
-    <h5 class="mb-3">Recent Complaints</h5>
+    <h3 class="mb-3">Recent Complaints</h3>
 
-    {% if complaints %}
-        <div class="row g-3">
-            {% for c in complaints %}
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h6 class="card-title fw-bold">{{ c.title }}</h6>
-                            <p class="mb-1"><strong>Category:</strong> {{ c.category }}</p>
-                            <p class="mb-1"><strong>Status:</strong> 
-                                {% if c.status == 'pending' %}
-                                    <span class="badge bg-warning text-dark">Pending</span>
-                                {% elif c.status == 'resolved' %}
-                                    <span class="badge bg-success">Resolved</span>
-                                {% elif c.status == 'in_progress' %}
-                                    <span class="badge bg-info text-dark">In Progress</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ c.status }}</span>
-                                {% endif %}
-                            </p>
-                            <p class="mb-1"><strong>Location:</strong> {{ c.location }}</p>
-                            {% if c.image %}
-                                <img src="{{ c.image.url }}" class="img-fluid rounded mt-2" alt="Complaint Image">
-                            {% endif %}
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Submitted on: {{ c.created_at|date:"M d, Y H:i" }}
-                        </div>
-                    </div>
-                </div>
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for complaint in complaints %}
+            <tr {% if complaint.status == "pending" %}class="table-warning"{% endif %}>
+                <td>{{ complaint.title }}</td>
+                <td>{{ complaint.category }}</td>
+                <td>{{ complaint.status|capfirst }}</td>
+                <td>{{ complaint.created_at|date:"M d, Y" }}</td>
+                <td>
+                    {% if user.profile.role in "staff admin" %}
+                        <a href="{% url 'pending_complaints' %}" class="btn btn-sm btn-warning">Process</a>
+                    {% endif %}
+                    <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-sm btn-info">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No complaints found.</td>
+            </tr>
             {% endfor %}
-        </div>
-    {% else %}
-        <p class="text-muted">You have not submitted any complaints yet.</p>
-    {% endif %}
-
+        </tbody>
+    </table>
 </div>
 {% endblock %}
