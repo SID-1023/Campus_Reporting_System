@@ -1,252 +1,55 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>All Complaints — Campus Reporting</title>
+{% extends "core/base.html" %}
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% block title %}All Complaints — Campus Reporting{% endblock %}
 
-  <style>
-    :root{
-      --accent-start: #5ee7df;
-      --accent-end: #7b61ff;
+{% block page_title %}All Complaints{% endblock %}
 
-      --glass-bg: rgba(255,255,255,0.10);
-      --glass-border: rgba(255,255,255,0.14);
+{% block content %}
+<div class="container-fluid p-0">
 
-      --card-radius: 18px;
-      --max-width: 920px;
-
-      /* Light mode */
-      --bg: #f4f6f9;
-      --text: #1e2a44;
-      --footer-color: #6b6b6b;
-      --nav-bg: linear-gradient(90deg,#1f7bf9,#2a9df4);
-    }
-
-    [data-theme="dark"] {
-      --bg: #0f1217;
-      --text: #d4ddf5;
-      --glass-bg: rgba(40,40,52,0.35);
-      --glass-border: rgba(200,200,255,0.09);
-      --footer-color: #9ca3af;
-      --nav-bg: linear-gradient(90deg,#0d3570,#17488d);
-    }
-
-    html,body {
-      height:100%;
-      margin:0;
-      font-family: Inter, system-ui;
-      background: var(--bg);
-      color: var(--text);
-      transition: background .4s, color .4s;
-    }
-
-    .hero {
-      background-image: url('/mnt/data/ec22c1a7-ad70-49d6-837a-dd5d93f2547d.png');
-      background-size: cover;
-      background-position: center;
-      opacity: 0.05;
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      filter: blur(8px);
-      pointer-events: none;
-    }
-
-    .nav {
-      height:72px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:0 18px;
-      background: var(--nav-bg);
-      color:white;
-      font-weight:700;
-      box-shadow:0 6px 18px rgba(20,40,100,0.12);
-      position:sticky;
-      top:0;
-      z-index:10;
-    }
-    .brand { font-size:1.15rem; }
-
-    .theme-btn {
-      background: rgba(255,255,255,0.20);
-      border: 1px solid rgba(255,255,255,0.32);
-      padding:6px 14px;
-      border-radius:8px;
-      color:white;
-      cursor:pointer;
-      backdrop-filter: blur(4px);
-    }
-
-    .container-lg {
-      padding-top:32px;
-      padding-bottom:40px;
-      position:relative;
-      z-index:1;
-    }
-
-    .btn-accent {
-      background: linear-gradient(90deg,var(--accent-start),var(--accent-end));
-      color:white;
-      border:none;
-      padding:10px 16px;
-      border-radius:10px;
-      font-weight:700;
-      box-shadow:0 10px 28px rgba(123,97,255,0.18);
-    }
-
-    .controls {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom:18px;
-    }
-
-    .searchbox input, .searchbox select {
-      border-radius:10px;
-      padding:10px 12px;
-      border:1px solid rgba(12,20,40,0.12);
-      background:white;
-    }
-
-    [data-theme="dark"] .searchbox input,
-    [data-theme="dark"] .searchbox select {
-      background: rgba(60,60,70,0.45);
-      color:white;
-    }
-
-    .grid {
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap:22px;
-      margin-top: 20px;
-    }
-
-    .card-glass {
-      background: var(--glass-bg);
-      border-radius: var(--card-radius);
-      padding:20px;
-      border:1px solid var(--glass-border);
-      backdrop-filter: blur(12px) saturate(140%);
-      -webkit-backdrop-filter: blur(12px) saturate(140%);
-      box-shadow:0 12px 40px rgba(20,20,40,0.12);
-    }
-
-    .title-link {
-      font-size:1.25rem;
-      font-weight:800;
-      color:#0b4cff;
-      text-decoration:none;
-    }
-
-    [data-theme="dark"] .title-link {
-      color:#9bb4ff;
-    }
-
-    .meta { margin-top:10px; font-size:0.95rem; }
-
-    footer {
-      text-align:center;
-      padding:20px;
-      font-size:0.85rem;
-      color:var(--footer-color);
-    }
-  </style>
-</head>
-
-<body>
-  <div class="hero"></div>
-
-  <!-- NAVBAR -->
-  <header class="nav">
-    <div class="brand">Campus Reporting System</div>
-    <button id="themeToggle" class="theme-btn">🌙 Dark Mode</button>
-  </header>
-
-  <main class="container-lg">
-
-    <!-- HEADER + BUTTON -->
-    <div class="controls">
-      <h2 class="mb-0">All Complaints</h2>
-
-      <a href="{% url 'report_complaint' %}" class="btn-accent">➕ Submit New</a>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>All Complaints</h2>
+        <a href="{% url 'report_complaint' %}" class="btn btn-primary" style="background:linear-gradient(90deg,#5ee7df,#7b61ff); border:none;">➕ Submit New</a>
     </div>
 
-    <!-- SEARCH + FILTERS -->
-    <div class="searchbox mb-3">
-      <form method="get" class="d-flex gap-2 flex-wrap">
-
-        <input type="text" name="q" value="{{ q }}" placeholder="Search title, description, location">
-
-        <select name="category" class="form-select" style="width:200px">
-          <option value="">All Categories</option>
-          {% for val,label in category_choices %}
-            <option value="{{ val }}" {% if selected_category == val %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
+    <!-- Search and Filters -->
+    <form method="get" class="d-flex gap-2 flex-wrap mb-3">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search title, description, location" class="form-control" style="max-width:250px;">
+        <select name="category" class="form-select" style="max-width:180px;">
+            <option value="">All Categories</option>
+            {% for val,label in category_choices %}
+                <option value="{{ val }}" {% if selected_category == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
         </select>
-
-        <select name="status" class="form-select" style="width:170px">
-          <option value="">All Status</option>
-          {% for val,label in status_choices %}
-            <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
+        <select name="status" class="form-select" style="max-width:150px;">
+            <option value="">All Status</option>
+            {% for val,label in status_choices %}
+                <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
         </select>
-
-        <button class="btn-accent" type="submit">Filter</button>
-
+        <button type="submit" class="btn btn-primary" style="background:linear-gradient(90deg,#5ee7df,#7b61ff); border:none;">Filter</button>
         <a href="{% url 'complaint_list' %}" class="btn btn-outline-secondary">Reset</a>
-      </form>
+    </form>
+
+    <!-- Complaints Grid -->
+    <div class="row g-3">
+        {% if complaints %}
+            {% for complaint in complaints %}
+                <div class="col-md-6">
+                    <div class="p-3 mb-3" style="border-radius:18px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.14); backdrop-filter: blur(12px) saturate(140%);">
+                        <a href="#" style="font-size:1.25rem; font-weight:800; color:#0b4cff;">{{ complaint.title }}</a>
+                        <p class="mt-2 mb-1"><strong>Category:</strong> {{ complaint.category }} | <strong>Location:</strong> {{ complaint.location }}</p>
+                        {% if complaint.image %}
+                            <img src="{{ complaint.image.url }}" class="img-fluid rounded mb-2">
+                        {% endif %}
+                        <small class="text-muted">{{ complaint.created_at|date:"M d, Y — h:i A" }}</small>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">No complaints found.</div>
+        {% endif %}
     </div>
 
-    <!-- COMPLAINT GRID -->
-    <div class="grid">
-      {% if complaints %}
-        {% for complaint in complaints %}
-          <article class="card-glass">
-
-            <a class="title-link" href="#">{{ complaint.title }}</a>
-
-            <div class="meta">
-              <strong>Category:</strong> {{ complaint.category }} <br>
-              <strong>Location:</strong> {{ complaint.location }}
-            </div>
-
-            {% if complaint.image %}
-              <img src="{{ complaint.image.url }}" style="max-width:100%; border-radius:12px; margin-top:12px;">
-            {% endif %}
-
-            <div class="meta" style="margin-top:14px;">
-              <small>{{ complaint.created_at|date:"M d, Y — h:i A" }}</small>
-            </div>
-
-          </article>
-        {% endfor %}
-      {% else %}
-        <div class="alert alert-info">No complaints found.</div>
-      {% endif %}
-    </div>
-  </main>
-
-  <footer>
-    © {{ now|date:"Y" }} Campus Reporting System — All Rights Reserved
-  </footer>
-
-  <!-- DARK MODE SCRIPT -->
-  <script>
-    const toggleBtn = document.getElementById("themeToggle");
-    toggleBtn.onclick = () => {
-      const html = document.documentElement;
-      const current = html.getAttribute("data-theme");
-      const newTheme = current === "light" ? "dark" : "light";
-      html.setAttribute("data-theme", newTheme);
-      toggleBtn.innerText = newTheme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode";
-    };
-  </script>
-
-</body>
-</html>
+</div>
+{% endblock %}

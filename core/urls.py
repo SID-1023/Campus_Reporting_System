@@ -9,6 +9,15 @@ urlpatterns = [
     path('report/', views.report_complaint, name='report_complaint'),
     path('complaints/', views.complaint_list, name='complaint_list'),
 
+    # Pending complaints (for staff/admin)
+    path('complaints/pending/', views.pending_complaints, name='pending_complaints'),
+
+    # Update complaint status
+    path('complaint/<int:complaint_id>/update/<str:new_status>/', views.update_status, name='update_status'),
+
+    # Complaint detail view
+    path('complaint/<int:complaint_id>/', views.complaint_detail, name='complaint_detail'),
+
     # Authentication
     path('register/', views.register, name='register'),
     path('login/', views.user_login, name='login'),

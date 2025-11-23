@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -17,17 +17,16 @@ def register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-
             # Auto-create Profile if not exists
-            Profile.objects.get_or_create(user=user, defaults={'role': form.cleaned_data.get('role')})
-
+            Profile.objects.get_or_create(
+                user=user, defaults={'role': form.cleaned_data.get('role')}
+            )
             messages.success(request, "Account created successfully! You can now login.")
             return redirect("login")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
         form = UserRegisterForm()
-
     return render(request, "core/register.html", {"form": form})
 
 
@@ -37,7 +36,6 @@ def register(request):
 def user_login(request):
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
-
         if form.is_valid():
             user = form.get_user()
             login(request, user)
@@ -47,7 +45,6 @@ def user_login(request):
             messages.error(request, "Invalid username or password.")
     else:
         form = AuthenticationForm()
-
     return render(request, "core/login.html", {"form": form})
 
 
@@ -62,24 +59,20 @@ def user_logout(request):
 
 
 # -------------------------------
-#  DASHBOARD (After Login)
+#  DASHBOARD
 # -------------------------------
 @login_required
 def dashboard(request):
     user = request.user
-
-    # Admin/staff can view all complaints
     if hasattr(user, "profile") and user.profile.role in ["staff", "admin"]:
         complaints = Complaint.objects.all().order_by("-created_at")
     else:
-        # Normal users see only their own complaints
         complaints = Complaint.objects.filter(user=user).order_by("-created_at")
-
     return render(request, "core/dashboard.html", {"complaints": complaints})
 
 
 # -------------------------------
-#  REPORT COMPLAINT (Logged in users only)
+#  REPORT COMPLAINT
 # -------------------------------
 @login_required
 def report_complaint(request):
@@ -87,7 +80,7 @@ def report_complaint(request):
         form = ComplaintForm(request.POST, request.FILES)
         if form.is_valid():
             complaint = form.save(commit=False)
-            complaint.user = request.user  # Attach the logged-in user
+            complaint.user = request.user
             complaint.save()
             messages.success(request, "Complaint submitted successfully!")
             return redirect("complaint_list")
@@ -95,7 +88,6 @@ def report_complaint(request):
             messages.error(request, "Please fix the errors below.")
     else:
         form = ComplaintForm()
-
     return render(request, "core/complaint_form.html", {"form": form})
 
 
@@ -137,5 +129,43 @@ def complaint_list(request):
         "category_choices": category_choices,
         "status_choices": status_choices,
     }
-
     return render(request, "core/complaint_list.html", context)
+
+
+# -------------------------------
+#  PENDING COMPLAINTS
+# -------------------------------
+@login_required
+def pending_complaints(request):
+    user = request.user
+    if hasattr(user, "profile") and user.profile.role in ["staff", "admin"]:
+        complaints = Complaint.objects.filter(status="pending").order_by("-created_at")
+    else:
+        messages.error(request, "You are not authorized to view pending complaints.")
+        return redirect("dashboard")
+    return render(request, "core/pending_complaints.html", {"complaints": complaints})
+
+
+# -------------------------------
+#  UPDATE COMPLAINT STATUS
+# -------------------------------
+@login_required
+def update_status(request, complaint_id, new_status):
+    if request.method == "POST":
+        complaint = get_object_or_404(Complaint, id=complaint_id)
+        complaint.status = new_status
+        complaint.save()
+        messages.success(
+            request,
+            f"Complaint '{complaint.title}' status updated to {new_status.replace('_',' ').title()}."
+        )
+    return redirect("pending_complaints")
+
+
+# -------------------------------
+#  VIEW COMPLAINT DETAIL
+# -------------------------------
+@login_required
+def complaint_detail(request, complaint_id):
+    complaint = get_object_or_404(Complaint, id=complaint_id)
+    return render(request, "core/complaint_detail.html", {"complaint": complaint})

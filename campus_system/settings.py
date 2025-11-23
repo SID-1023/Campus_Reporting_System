@@ -20,7 +20,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 # ---------------------------------------------------------------------------
 SECRET_KEY = 'django-insecure-popqi1$x%+e()v0an*k85d+pub60*+3m*jyybj5i2yt!pzdf@a'
-
 DEBUG = True  # Change to False in production
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
@@ -37,11 +36,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Third-party apps
-    'rest_framework',
-    'widget_tweaks',  # for template form styling
+    'rest_framework',       # REST API support
+    'widget_tweaks',        # For template form styling
 
     # Local apps
-    'core',
+    'core',                 # Your app containing models, views, templates
 ]
 
 # ---------------------------------------------------------------------------
@@ -81,6 +80,9 @@ TEMPLATES = [
     },
 ]
 
+# ---------------------------------------------------------------------------
+# WSGI
+# ---------------------------------------------------------------------------
 WSGI_APPLICATION = 'campus_system.wsgi.application'
 
 # ---------------------------------------------------------------------------
