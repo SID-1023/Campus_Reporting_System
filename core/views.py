@@ -1,12 +1,12 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.db import models
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Complaint
+from django.db import models
+
 from .forms import ComplaintForm, UserRegisterForm
+from .models import Complaint, Profile
 
 
 # -------------------------------
@@ -16,7 +16,11 @@ def register(request):
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+
+            # Auto-create Profile if not exists
+            Profile.objects.get_or_create(user=user, defaults={'role': form.cleaned_data.get('role')})
+
             messages.success(request, "Account created successfully! You can now login.")
             return redirect("login")
         else:
@@ -50,6 +54,7 @@ def user_login(request):
 # -------------------------------
 #  USER LOGOUT
 # -------------------------------
+@login_required
 def user_logout(request):
     logout(request)
     messages.info(request, "Logged out successfully.")
@@ -63,18 +68,18 @@ def user_logout(request):
 def dashboard(request):
     user = request.user
 
-    # If admin/staff — can view all complaints
+    # Admin/staff can view all complaints
     if hasattr(user, "profile") and user.profile.role in ["staff", "admin"]:
         complaints = Complaint.objects.all().order_by("-created_at")
     else:
-        # student can view only their own
+        # Normal users see only their own complaints
         complaints = Complaint.objects.filter(user=user).order_by("-created_at")
 
     return render(request, "core/dashboard.html", {"complaints": complaints})
 
 
 # -------------------------------
-#  REPORT COMPLAINT (Only if logged in)
+#  REPORT COMPLAINT (Logged in users only)
 # -------------------------------
 @login_required
 def report_complaint(request):
@@ -82,13 +87,12 @@ def report_complaint(request):
         form = ComplaintForm(request.POST, request.FILES)
         if form.is_valid():
             complaint = form.save(commit=False)
-            complaint.user = request.user  # attach logged-in user
+            complaint.user = request.user  # Attach the logged-in user
             complaint.save()
-
             messages.success(request, "Complaint submitted successfully!")
             return redirect("complaint_list")
         else:
-            messages.error(request, "Please fix the errors.")
+            messages.error(request, "Please fix the errors below.")
     else:
         form = ComplaintForm()
 
@@ -98,6 +102,7 @@ def report_complaint(request):
 # -------------------------------
 #  LIST + SEARCH + FILTER COMPLAINTS
 # -------------------------------
+@login_required
 def complaint_list(request):
     q = request.GET.get("q", "").strip()
     category = request.GET.get("category", "").strip()
@@ -105,7 +110,7 @@ def complaint_list(request):
 
     complaints = Complaint.objects.all().order_by("-created_at")
 
-    # search logic
+    # Search logic
     if q:
         complaints = complaints.filter(
             models.Q(title__icontains=q)
@@ -113,25 +118,24 @@ def complaint_list(request):
             | models.Q(location__icontains=q)
         )
 
-    # filter logic
+    # Filter by category
     if category:
         complaints = complaints.filter(category=category)
 
+    # Filter by status
     if status:
         complaints = complaints.filter(status=status)
 
     category_choices = Complaint._meta.get_field("category").choices
     status_choices = Complaint._meta.get_field("status").choices
 
-    return render(
-        request,
-        "core/complaint_list.html",
-        {
-            "complaints": complaints,
-            "q": q,
-            "selected_category": category,
-            "selected_status": status,
-            "category_choices": category_choices,
-            "status_choices": status_choices,
-        },
-    )
+    context = {
+        "complaints": complaints,
+        "q": q,
+        "selected_category": category,
+        "selected_status": status,
+        "category_choices": category_choices,
+        "status_choices": status_choices,
+    }
+
+    return render(request, "core/complaint_list.html", context)

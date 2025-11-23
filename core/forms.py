@@ -3,7 +3,6 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Complaint, Profile
 
-
 # --------------------------
 # Complaint Submission Form
 # --------------------------
@@ -41,7 +40,6 @@ class ComplaintForm(forms.ModelForm):
             }),
         }
 
-
 # --------------------------
 # User Registration Form
 # --------------------------
@@ -53,25 +51,30 @@ class UserRegisterForm(UserCreationForm):
     role = forms.ChoiceField(
         choices=Profile.ROLE_CHOICES,
         initial='student',
-        label="Select Role"
+        label="Select Role",
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
 
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2', 'role']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}),
+            'password1': forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}),
+            'password2': forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm Password'}),
+        }
 
     def save(self, commit=True):
-        # Save the user object first
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
 
         if commit:
             user.save()
 
-            # Update role in the linked Profile
-            role = self.cleaned_data.get('role')
-            profile = Profile.objects.get(user=user)
-            profile.role = role
+            # Ensure Profile exists, create if not
+            profile, created = Profile.objects.get_or_create(user=user)
+            profile.role = self.cleaned_data.get('role')
             profile.save()
 
         return user
