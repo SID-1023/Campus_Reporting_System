@@ -1,0 +1,14 @@
+{% extends "base.html" %}   {# if you already use base.html; otherwise use a simple full HTML layout #}
+{% block content %}
+<div class="container mt-5">
+  <div class="card p-4" style="max-width:540px;margin:auto;">
+    <h3 class="mb-3">Create account</h3>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+    <p class="mt-3">Already have an account? <a href="{% url 'login' %}">Login</a></p>
+  </div>
+</div>
+{% endblock %}

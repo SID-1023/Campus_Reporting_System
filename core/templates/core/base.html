@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Campus Reporting System{% endblock %}</title>
+
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        /* Light Theme */
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --sidebar-bg: #003d8f;
+            --sidebar-text: #fff;
+        }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --bg-color: #1f1f1f;
+            --card-bg: #2c2c2c;
+            --text-color: #e0e0e0;
+            --sidebar-bg: #001e44;
+            --sidebar-text: #fff;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: var(--sidebar-bg);
+            height: 100vh;
+            position: fixed;
+            padding-top: 25px;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.2);
+        }
+
+        .sidebar h4 {
+            font-weight: bold;
+        }
+
+        .sidebar a {
+            color: var(--sidebar-text);
+            display: block;
+            padding: 14px 22px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.18);
+            padding-left: 30px;
+        }
+
+        /* Main Content */
+        .content {
+            margin-left: 260px;
+            padding: 35px;
+        }
+
+        .card {
+            border-radius: 12px;
+            background: var(--card-bg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            border: none;
+        }
+
+        /* Navbar inside content */
+        .top-navbar {
+            border-radius: 12px;
+            background: var(--card-bg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            padding: 15px 25px;
+            margin-bottom: 25px;
+        }
+
+        footer {
+            margin-top: 40px;
+            padding: 20px 0;
+            text-align: center;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h4 class="text-center text-white mb-4">Campus Portal</h4>
+
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
+            <a href="{% url 'complaint_list' %}">📄 All Complaints</a>
+            <a href="{% url 'report_complaint' %}">➕ Report Complaint</a>
+            <a href="{% url 'logout' %}" class="text-danger">🚪 Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">🔐 Login</a>
+            <a href="{% url 'register' %}">📝 Register</a>
+        {% endif %}
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="content">
+
+        <!-- PAGE NAVBAR -->
+        <div class="top-navbar d-flex justify-content-between align-items-center">
+            <h4 class="m-0">{% block page_title %}{% endblock %}</h4>
+
+            <!-- Theme Toggle -->
+            <button id="themeToggle" class="btn btn-outline-primary">
+                🌙 Dark Mode
+            </button>
+        </div>
+
+        <!-- PAGE CONTENT -->
+        {% block content %}{% endblock %}
+
+        <!-- FOOTER -->
+        <footer>
+            © {{ year }} Campus Reporting System — All Rights Reserved
+        </footer>
+    </div>
+
+    <!-- Dark Mode Script -->
+    <script>
+        const toggleBtn = document.getElementById("themeToggle");
+        toggleBtn.addEventListener("click", () => {
+            const html = document.documentElement;
+            const newTheme =
+                html.getAttribute("data-theme") === "light" ? "dark" : "light";
+
+            html.setAttribute("data-theme", newTheme);
+
+            toggleBtn.innerText =
+                newTheme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode";
+        });
+    </script>
+
+</body>
+</html>

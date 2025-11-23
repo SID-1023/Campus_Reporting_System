@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Submit Complaint — Campus Reporting</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --glass-bg: rgba(255,255,255,0.10);
+      --glass-border: rgba(255,255,255,0.14);
+      --accent: linear-gradient(90deg,#5ee7df,#7b61ff);
+      --card-radius: 18px;
+      --max-width: 920px;
+
+      /* Light mode colors */
+      --bg: #f4f6f8;
+      --text: #1e2a44;
+      --nav-bg: linear-gradient(90deg,#1f7bf9,#2a9df4);
+      --footer-color: #6b6b6b;
+    }
+
+    /* Dark Mode */
+    [data-theme="dark"] {
+      --bg: #0f1217;
+      --text: #dce3ff;
+      --glass-bg: rgba(30,30,40,0.35);
+      --glass-border: rgba(200,200,255,0.08);
+      --nav-bg: linear-gradient(90deg,#0e3a78,#1a4fa1);
+      --accent: linear-gradient(90deg,#6de6e2,#9271ff);
+      --footer-color: #9ca3af;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, system-ui;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.4s, color 0.4s;
+    }
+
+    /* Background image */
+    .hero {
+      background-image: url('/mnt/data/ec22c1a7-ad70-49d6-837a-dd5d93f2547d.png');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.06;
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      filter: blur(8px);
+      pointer-events: none;
+    }
+
+    /* Navbar */
+    .nav {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      background: var(--nav-bg);
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 6px 18px rgba(30,60,120,0.10);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand { font-size: 1.15rem; }
+
+    .theme-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 14px;
+      border-radius: 8px;
+      color: white;
+      font-size: 0.85rem;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: calc(100vh - 100px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px;
+    }
+
+    /* Glass Card */
+    .glass-card {
+      width: 100%;
+      max-width: var(--max-width);
+      background: var(--glass-bg);
+      border-radius: var(--card-radius);
+      padding: 26px;
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 12px 40px rgba(21,32,64,0.12);
+    }
+
+    .title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      margin: 0;
+      color: #0b4cff;
+    }
+
+    [data-theme="dark"] .title {
+      color: #8faaff;
+    }
+
+    form .form-control, select, textarea {
+      border-radius: 10px;
+      border: 1px solid rgba(10,20,40,0.12);
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.85);
+    }
+
+    [data-theme="dark"] form .form-control,
+    [data-theme="dark"] textarea {
+      background: rgba(60,60,70,0.45);
+      color: white;
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      font-weight: 700;
+      border-radius: 10px;
+      width: 170px;
+      box-shadow: 0 8px 24px rgba(123,97,255,0.18);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(30,40,60,0.18);
+      padding: 10px 18px;
+      border-radius: 10px;
+      color: var(--text);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.85rem;
+      color: var(--footer-color);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hero"></div>
+
+  <!-- NAVBAR -->
+  <header class="nav">
+    <div class="brand">Campus Reporting System</div>
+
+    <button id="themeToggle" class="theme-btn">🌙 Dark Mode</button>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="page">
+    <div class="glass-card">
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="title">Submit a Complaint</h1>
+
+        <a href="{% url 'complaint_list' %}" class="btn-ghost">View Complaints</a>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <label>Title</label>
+        {{ form.title }} <br>
+
+        <label>Description</label>
+        {{ form.description }} <br>
+
+        <label>Category</label>
+        {{ form.category }} <br>
+
+        <label>Location</label>
+        {{ form.location }} <br>
+
+        <label>Upload Image (optional)</label>
+        {{ form.image }} <br>
+
+        <div class="d-flex gap-3 mt-4">
+          <button type="submit" class="btn-accent">Submit</button>
+          <a href="{% url 'complaint_list' %}" class="btn-ghost">Cancel</a>
+        </div>
+      </form>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    © {{ now|date:"Y" }} Campus Reporting System — All Rights Reserved
+  </footer>
+
+  <script>
+    // Dark mode toggle
+    const toggleBtn = document.getElementById("themeToggle");
+    toggleBtn.onclick = () => {
+      const html = document.documentElement;
+      const current = html.getAttribute("data-theme");
+      const newTheme = current === "light" ? "dark" : "light";
+      html.setAttribute("data-theme", newTheme);
+      toggleBtn.innerText = newTheme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode";
+    };
+  </script>
+
+</body>
+</html>
